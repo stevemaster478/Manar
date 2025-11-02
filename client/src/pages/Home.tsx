@@ -58,44 +58,38 @@ export default function Home() {
 
       <section className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card className="p-6 hover-elevate">
-          <Link href="/search">
-            <a className="space-y-2 block" data-testid="link-search">
-              <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
-                <Search className="h-6 w-6 text-primary" />
-              </div>
-              <h3 className="font-semibold">Cerca Testi</h3>
-              <p className="text-sm text-muted-foreground">
-                Trova testi arabi con filtri avanzati
-              </p>
-            </a>
+          <Link href="/search" className="space-y-2 block" data-testid="link-search">
+            <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
+              <Search className="h-6 w-6 text-primary" />
+            </div>
+            <h3 className="font-semibold">Cerca Testi</h3>
+            <p className="text-sm text-muted-foreground">
+              Trova testi arabi con filtri avanzati
+            </p>
           </Link>
         </Card>
 
         <Card className="p-6 hover-elevate">
-          <Link href="/bookmarks">
-            <a className="space-y-2 block" data-testid="link-bookmarks">
-              <div className="h-12 w-12 rounded-lg bg-chart-2/10 flex items-center justify-center">
-                <Bookmark className="h-6 w-6 text-chart-2" />
-              </div>
-              <h3 className="font-semibold">Segnalibri</h3>
-              <p className="text-sm text-muted-foreground">
-                Accedi ai tuoi passaggi salvati
-              </p>
-            </a>
+          <Link href="/bookmarks" className="space-y-2 block" data-testid="link-bookmarks">
+            <div className="h-12 w-12 rounded-lg bg-chart-2/10 flex items-center justify-center">
+              <Bookmark className="h-6 w-6 text-chart-2" />
+            </div>
+            <h3 className="font-semibold">Segnalibri</h3>
+            <p className="text-sm text-muted-foreground">
+              Accedi ai tuoi passaggi salvati
+            </p>
           </Link>
         </Card>
 
         <Card className="p-6 hover-elevate">
-          <Link href="/history">
-            <a className="space-y-2 block" data-testid="link-history">
-              <div className="h-12 w-12 rounded-lg bg-chart-3/10 flex items-center justify-center">
-                <History className="h-6 w-6 text-chart-3" />
-              </div>
-              <h3 className="font-semibold">Cronologia</h3>
-              <p className="text-sm text-muted-foreground">
-                Riprendi la tua lettura
-              </p>
-            </a>
+          <Link href="/history" className="space-y-2 block" data-testid="link-history">
+            <div className="h-12 w-12 rounded-lg bg-chart-3/10 flex items-center justify-center">
+              <History className="h-6 w-6 text-chart-3" />
+            </div>
+            <h3 className="font-semibold">Cronologia</h3>
+            <p className="text-sm text-muted-foreground">
+              Riprendi la tua lettura
+            </p>
           </Link>
         </Card>
 
@@ -116,9 +110,7 @@ export default function Home() {
         <div className="flex items-center justify-between">
           <h2 className="text-2xl font-semibold">Letture Recenti</h2>
           <Button variant="ghost" size="sm" asChild data-testid="button-view-all-history">
-            <Link href="/history">
-              <a>Vedi tutto</a>
-            </Link>
+            <Link href="/history">Vedi tutto</Link>
           </Button>
         </div>
         {historyLoading ? (
@@ -138,9 +130,7 @@ export default function Home() {
                     </p>
                   </div>
                   <Button size="sm" asChild data-testid={`button-continue-${item.textId}`}>
-                    <Link href={`/text/${item.textId}`}>
-                      <a>Continua</a>
-                    </Link>
+                    <Link href={`/text/${item.textId}`}>Continua</Link>
                   </Button>
                 </div>
               </Card>
@@ -151,9 +141,7 @@ export default function Home() {
             <BookOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <p className="text-muted-foreground">Nessuna lettura recente</p>
             <Button className="mt-4" asChild data-testid="button-start-reading">
-              <Link href="/search">
-                <a>Inizia a leggere</a>
-              </Link>
+              <Link href="/search">Inizia a leggere</Link>
             </Button>
           </Card>
         )}
@@ -163,9 +151,7 @@ export default function Home() {
         <div className="flex items-center justify-between">
           <h2 className="text-2xl font-semibold">Segnalibri Recenti</h2>
           <Button variant="ghost" size="sm" asChild data-testid="button-view-all-bookmarks">
-            <Link href="/bookmarks">
-              <a>Vedi tutto</a>
-            </Link>
+            <Link href="/bookmarks">Vedi tutto</Link>
           </Button>
         </div>
         {bookmarksLoading ? (
@@ -181,9 +167,7 @@ export default function Home() {
                   <div className="flex items-start justify-between gap-4">
                     <h4 className="font-medium">Testo #{bookmark.textId}</h4>
                     <Button size="sm" variant="outline" asChild data-testid={`button-goto-bookmark-${bookmark.id}`}>
-                      <Link href={`/text/${bookmark.textId}`}>
-                        <a>Vai</a>
-                      </Link>
+                      <Link href={`/text/${bookmark.textId}`}>Vai</Link>
                     </Button>
                   </div>
                   {bookmark.excerpt && (
@@ -203,9 +187,7 @@ export default function Home() {
             <Bookmark className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <p className="text-muted-foreground">Nessun segnalibro salvato</p>
             <Button className="mt-4" asChild data-testid="button-add-bookmark">
-              <Link href="/search">
-                <a>Esplora i testi</a>
-              </Link>
+              <Link href="/search">Esplora i testi</Link>
             </Button>
           </Card>
         )}

@@ -24,15 +24,28 @@ export default function Search() {
   const buildQueryParams = () => {
     const params = new URLSearchParams();
     if (searchQuery) params.append("q", searchQuery);
-    if (author) params.append("author", author);
-    if (category) params.append("category", category);
-    if (era) params.append("era", era);
+    if (author && author !== "all") params.append("author", author);
+    if (category && category !== "all") params.append("category", category);
+    if (era && era !== "all") params.append("era", era);
     return params.toString();
   };
 
+  const hasFilters = searchQuery.length > 0 || (!!author && author !== "all") || (!!category && category !== "all") || (!!era && era !== "all");
+
   const { data: texts, isLoading } = useQuery<Text[]>({
     queryKey: ["/api/texts/search", searchQuery, author, category, era],
-    enabled: searchQuery.length > 0 || !!author || !!category || !!era,
+    queryFn: async () => {
+      const queryString = buildQueryParams();
+      const url = `/api/texts/search${queryString ? `?${queryString}` : ''}`;
+      const response = await fetch(url, {
+        credentials: 'include',
+      });
+      if (!response.ok) {
+        throw new Error('Failed to fetch texts');
+      }
+      return response.json();
+    },
+    enabled: hasFilters,
   });
 
   const handleSearch = (e: React.FormEvent) => {
@@ -73,7 +86,7 @@ export default function Search() {
                   <SelectValue placeholder="Tutti gli autori" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Tutti gli autori</SelectItem>
+                  <SelectItem value="all">Tutti gli autori</SelectItem>
                   <SelectItem value="ibn_taymiyyah">Ibn Taymiyyah</SelectItem>
                   <SelectItem value="ibn_qayyim">Ibn al-Qayyim</SelectItem>
                   <SelectItem value="al_bukhari">Al-Bukhari</SelectItem>
@@ -92,7 +105,7 @@ export default function Search() {
                   <SelectValue placeholder="Tutte le categorie" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Tutte le categorie</SelectItem>
+                  <SelectItem value="all">Tutte le categorie</SelectItem>
                   <SelectItem value="hadith">Hadith</SelectItem>
                   <SelectItem value="tafsir">Tafsir</SelectItem>
                   <SelectItem value="fiqh">Fiqh</SelectItem>
@@ -112,7 +125,7 @@ export default function Search() {
                   <SelectValue placeholder="Tutte le epoche" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Tutte le epoche</SelectItem>
+                  <SelectItem value="all">Tutte le epoche</SelectItem>
                   <SelectItem value="classical">Classica (fino al 1258)</SelectItem>
                   <SelectItem value="medieval">Medievale (1258-1517)</SelectItem>
                   <SelectItem value="ottoman">Ottomana (1517-1924)</SelectItem>
@@ -122,15 +135,15 @@ export default function Search() {
             </div>
           </div>
 
-          {(author || category || era) && (
+          {((author && author !== "all") || (category && category !== "all") || (era && era !== "all")) && (
             <Button
               type="button"
               variant="ghost"
               size="sm"
               onClick={() => {
-                setAuthor("");
-                setCategory("");
-                setEra("");
+                setAuthor("all");
+                setCategory("all");
+                setEra("all");
               }}
               data-testid="button-clear-filters"
             >

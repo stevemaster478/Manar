@@ -46,29 +46,27 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-16 items-center justify-between px-4 mx-auto max-w-7xl">
           <div className="flex items-center gap-6">
-            <Link href="/">
-              <a className="flex items-center gap-2" data-testid="link-logo">
-                <BookOpen className="h-6 w-6 text-primary" />
-                <h1 className="text-xl font-semibold hidden sm:block">Salafiyyūn</h1>
-              </a>
+            <Link href="/" className="flex items-center gap-2" data-testid="link-logo">
+              <BookOpen className="h-6 w-6 text-primary" />
+              <h1 className="text-xl font-semibold hidden sm:block">Salafiyyūn</h1>
             </Link>
 
             <nav className="hidden md:flex items-center gap-1">
               {NAV_ITEMS.map((item) => {
                 const isActive = location === item.href;
+                const Icon = item.icon;
                 return (
                   <Button
                     key={item.href}
                     variant={isActive ? "secondary" : "ghost"}
                     size="sm"
-                    asChild
                     data-testid={item.testId}
+                    className="flex items-center gap-2"
+                    asChild
                   >
                     <Link href={item.href}>
-                      <a className="flex items-center gap-2">
-                        <item.icon className="h-4 w-4" />
-                        <span>{item.label}</span>
-                      </a>
+                      <Icon className="h-4 w-4" />
+                      <span>{item.label}</span>
                     </Link>
                   </Button>
                 );
@@ -122,20 +120,19 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         <div className="flex items-center justify-around h-16 px-2">
           {NAV_ITEMS.map((item) => {
             const isActive = location === item.href;
+            const Icon = item.icon;
             return (
               <Button
                 key={item.href}
                 variant="ghost"
                 size="sm"
-                asChild
                 className={`flex-col h-14 gap-1 ${isActive ? "text-primary" : ""}`}
                 data-testid={`${item.testId}-mobile`}
+                asChild
               >
                 <Link href={item.href}>
-                  <a>
-                    <item.icon className="h-5 w-5" />
-                    <span className="text-xs">{item.label}</span>
-                  </a>
+                  <Icon className="h-5 w-5" />
+                  <span className="text-xs">{item.label}</span>
                 </Link>
               </Button>
             );
