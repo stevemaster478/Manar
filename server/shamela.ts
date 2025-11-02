@@ -76,6 +76,25 @@ export async function getShamelaTextById(id: number): Promise<ShamelaSearchResul
 export { getShamelaTextByUrl };
 
 /**
+ * Get a specific page from a Shamela book
+ */
+export async function getShamelaPage(bookId: number, pageNumber: number): Promise<ShamelaSearchResult | null> {
+  const enableScraping = process.env.ENABLE_SHAMELA_SCRAPING === "true";
+  
+  if (!enableScraping) {
+    return null;
+  }
+
+  try {
+    const { getShamelaPage: scrapePage } = await import("./shamela-scraper");
+    return await scrapePage(bookId, pageNumber);
+  } catch (error) {
+    console.error("Error fetching Shamela page:", error);
+    return null;
+  }
+}
+
+/**
  * Sync Shamela search results to local database
  */
 export async function syncShamelaToDatabase(

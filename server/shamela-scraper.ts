@@ -345,3 +345,107 @@ export async function getShamelaTextByUrl(url: string): Promise<ShamelaSearchRes
   return getShamelaTextById(id, url);
 }
 
+/**
+ * Get a specific page/chapter from a Shamela book
+ */
+export async function getShamelaPage(bookId: number, pageNumber: number): Promise<ShamelaSearchResult | null> {
+  if (!checkRateLimit()) {
+    console.warn("Rate limit exceeded for Shamela scraping");
+    return null;
+  }
+
+  try {
+    const baseUrl = "https://shamela.ws";
+    // Try different URL patterns for pages
+    const pageUrls = [
+      `${baseUrl}/book/${bookId}/${pageNumber}`,
+      `${baseUrl}/book/${bookId}/page/${pageNumber}`,
+      `${baseUrl}/book/${bookId}?page=${pageNumber}`,
+    ];
+
+    let html = "";
+    let successUrl = "";
+
+    // Try each URL pattern until one works
+    for (const pageUrl of pageUrls) {
+      try {
+        const response = await fetch(pageUrl, {
+          method: "GET",
+          headers: {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+            "Accept-Language": "ar,en-US;q=0.9,en;q=0.8",
+            "Referer": `https://shamela.ws/book/${bookId}`,
+          },
+        });
+
+        if (response.ok) {
+          html = await response.text();
+          successUrl = pageUrl;
+          break;
+        }
+      } catch (error) {
+        // Try next URL pattern
+        continue;
+      }
+    }
+
+    if (!html) {
+      return null;
+    }
+
+    const $ = cheerio.load(html);
+
+    // Extract page information
+    const title = $("h1, .book-title, .title, [class*='title']").first().text().trim();
+    const author = $(".author, .book-author, .by, [class*='author']").first().text().trim();
+
+    // Remove unwanted elements
+    $("header, footer, nav, .sidebar, .menu, script, style").remove();
+
+    // Extract page content
+    const contentSelectors = [
+      ".page-content, .content, .text-content, .book-text",
+      "#content, main .content, article .content",
+      ".book-body, article, main",
+      "[class*='content'], [class*='text']",
+    ];
+
+    let content = "";
+    for (const selector of contentSelectors) {
+      const $content = $(selector).first();
+      if ($content.length > 0 && $content.text().trim().length > 50) {
+        content = $content.text().trim();
+        break;
+      }
+    }
+
+    if (!content || content.length < 50) {
+      content = $("body").clone().children("header, footer, nav, script, style").remove().end().text().trim();
+    }
+
+    // Extract navigation links (previous/next pages)
+    const nextPageLink = $("a[href*='next'], a[rel='next'], .next-page, .pagination a").attr("href");
+    const prevPageLink = $("a[href*='prev'], a[rel='prev'], .prev-page").attr("href");
+
+    return {
+      id: bookId,
+      title: title || `Libro ${bookId} - Pagina ${pageNumber}`,
+      author: author || "",
+      content: content || "",
+      url: successUrl,
+      currentPage: pageNumber,
+      metadata: {
+        source: "shamela.ws",
+        scrapedAt: new Date().toISOString(),
+        pageNumber,
+        hasNextPage: !!nextPageLink,
+        hasPrevPage: !!prevPageLink,
+      },
+    };
+  } catch (error) {
+    console.error(`Error fetching Shamela page ${pageNumber}:`, error);
+    return null;
+  }
+}
+

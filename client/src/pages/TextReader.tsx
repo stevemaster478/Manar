@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, Link, useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -60,12 +60,20 @@ export default function TextReader() {
   const [bookmarkNote, setBookmarkNote] = useState("");
   const [isTranslatingPage, setIsTranslatingPage] = useState(false);
   const [showChapters, setShowChapters] = useState(false);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+
+  // Reset currentPage quando cambia il libro
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [id]);
 
   const { data: text, isLoading, refetch } = useQuery<Text>({
-    queryKey: ["/api/texts", id, "fromShamela"],
+    queryKey: ["/api/texts", id, "fromShamela", currentPage],
     queryFn: async (): Promise<Text> => {
       // Se il testo proviene da Shamela (verificato dal metadata), forziamo il refresh
-      const url = `/api/texts/${id}?fromShamela=true`;
+      const url = currentPage > 1 
+        ? `/api/texts/${id}?fromShamela=true&page=${currentPage}`
+        : `/api/texts/${id}?fromShamela=true`;
       const response = await fetch(url, {
         credentials: 'include',
       });
@@ -80,6 +88,41 @@ export default function TextReader() {
   const chapters = text?.metadata && typeof text.metadata === 'object' && 'chapters' in text.metadata 
     ? (text.metadata.chapters as Array<{ id: number; title: string; page?: number }>)
     : undefined;
+
+  // Determina se il testo proviene da Shamela.ws
+  const isShamelaText = text?.metadata && typeof text.metadata === 'object' && 'source' in text.metadata
+    ? (text.metadata.source === "shamela.ws")
+    : false;
+
+  const hasNextPage = text?.metadata && typeof text.metadata === 'object' && 'hasNextPage' in text.metadata
+    ? (text.metadata.hasNextPage as boolean)
+    : (isShamelaText); // Per testi Shamela, abilita sempre la navigazione (verrà disabilitata se la pagina non esiste)
+
+  const hasPrevPage = text?.metadata && typeof text.metadata === 'object' && 'hasPrevPage' in text.metadata
+    ? (text.metadata.hasPrevPage as boolean)
+    : (currentPage > 1);
+
+  const handleNextPage = () => {
+    if (hasNextPage || isShamelaText) {
+      setCurrentPage(prev => prev + 1);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  const handlePrevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(prev => prev - 1);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  const handleGoToChapter = (chapterPage?: number) => {
+    if (chapterPage) {
+      setCurrentPage(chapterPage);
+      setShowChapters(false);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
 
   const translateMutation = useMutation<Translation, Error, { textToTranslate: string; isFullPage?: boolean }>({
     mutationFn: async ({ textToTranslate, isFullPage = false }) => {
@@ -272,6 +315,35 @@ export default function TextReader() {
 
         <div className="flex-1" />
 
+        {/* Navigazione pagine - mostra per tutti i testi Shamela */}
+        {(isShamelaText || hasPrevPage || hasNextPage) && (
+          <div className="flex items-center gap-2 border-l pl-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handlePrevPage}
+              disabled={!hasPrevPage}
+              className="gap-1"
+            >
+              <ChevronLeft className="h-4 w-4" />
+              Precedente
+            </Button>
+            <span className="text-sm text-muted-foreground px-2">
+              Pag. {currentPage}
+            </span>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleNextPage}
+              disabled={!hasNextPage && !isShamelaText}
+              className="gap-1"
+            >
+              Successiva
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        )}
+
         {/* Navigazione capitoli se disponibile */}
         {chapters && chapters.length > 0 && (
           <Button
@@ -462,14 +534,7 @@ export default function TextReader() {
                   variant="ghost"
                   className="w-full justify-start text-left font-serif"
                   dir="rtl"
-                  onClick={() => {
-                    // TODO: Navigate to chapter (richiede implementazione backend)
-                    setShowChapters(false);
-                    toast({
-                      title: "Navigazione capitoli",
-                      description: "Funzionalità in fase di sviluppo",
-                    });
-                  }}
+                  onClick={() => handleGoToChapter(chapter.page)}
                 >
                   <ChevronLeft className="h-4 w-4 mr-2" />
                   {chapter.title}

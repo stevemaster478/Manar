@@ -110,7 +110,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const textId = parseInt(req.params.id);
       const { fromShamela, page } = req.query;
       
-      // Se fromShamela=true, scarica il testo da Shamela invece del database locale
+      // Se fromShamela=true e page specificata, scarica quella pagina specifica
+      if (fromShamela === "true" && page && process.env.ENABLE_SHAMELA_SCRAPING === "true") {
+        try {
+          const { getShamelaPage } = await import("./shamela");
+          const pageNumber = parseInt(page as string);
+          const shamelaPage = await getShamelaPage(textId, pageNumber);
+          
+          if (shamelaPage) {
+            // Ritorna la pagina senza salvare (le pagine sono dinamiche)
+            return res.json(shamelaPage);
+          }
+        } catch (shamelaError) {
+          console.error("Error fetching page from Shamela:", shamelaError);
+          // Fallback al database locale
+        }
+      }
+      
+      // Se fromShamela=true (senza page), scarica il testo completo
       if (fromShamela === "true" && process.env.ENABLE_SHAMELA_SCRAPING === "true") {
         try {
           const { getShamelaTextById } = await import("./shamela-scraper");
