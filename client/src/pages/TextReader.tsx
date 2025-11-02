@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useParams, Link } from "wouter";
+import { useParams, Link, useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -60,13 +60,10 @@ export default function TextReader() {
   const [bookmarkNote, setBookmarkNote] = useState("");
   const [isTranslatingPage, setIsTranslatingPage] = useState(false);
   const [showChapters, setShowChapters] = useState(false);
-  const chapters = text?.metadata && typeof text.metadata === 'object' && 'chapters' in text.metadata 
-    ? (text.metadata.chapters as Array<{ id: number; title: string; page?: number }>)
-    : undefined;
 
   const { data: text, isLoading, refetch } = useQuery<Text>({
     queryKey: ["/api/texts", id, "fromShamela"],
-    queryFn: async () => {
+    queryFn: async (): Promise<Text> => {
       // Se il testo proviene da Shamela (verificato dal metadata), forziamo il refresh
       const url = `/api/texts/${id}?fromShamela=true`;
       const response = await fetch(url, {
@@ -75,18 +72,23 @@ export default function TextReader() {
       if (!response.ok) {
         throw new Error('Failed to fetch text');
       }
-      return response.json();
+      return response.json() as Promise<Text>;
     },
     enabled: !!id,
   });
 
-  const translateMutation = useMutation({
-    mutationFn: async ({ textToTranslate, isFullPage = false }: { textToTranslate: string; isFullPage?: boolean }) => {
-      return await apiRequest("POST", "/api/translate", {
+  const chapters = text?.metadata && typeof text.metadata === 'object' && 'chapters' in text.metadata 
+    ? (text.metadata.chapters as Array<{ id: number; title: string; page?: number }>)
+    : undefined;
+
+  const translateMutation = useMutation<Translation, Error, { textToTranslate: string; isFullPage?: boolean }>({
+    mutationFn: async ({ textToTranslate, isFullPage = false }) => {
+      const result = await apiRequest("POST", "/api/translate", {
         textId: id,
         originalText: textToTranslate,
         isFullPage,
       });
+      return result as Promise<Translation>;
     },
     onSuccess: (data: Translation) => {
       setTranslatedText(data.translatedText);
