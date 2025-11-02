@@ -1,0 +1,11 @@
+node_modules
+.local
+attached_assets
+.replit
+*.log
+.env.local
+.git
+
+# Documentation (keep only README.md)
+*.md
+!README.md

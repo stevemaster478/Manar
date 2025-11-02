@@ -48,7 +48,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           <div className="flex items-center gap-6">
             <Link href="/" className="flex items-center gap-2" data-testid="link-logo">
               <BookOpen className="h-6 w-6 text-primary" />
-              <h1 className="text-xl font-semibold hidden sm:block">Salafiyyūn</h1>
+              <h1 className="text-xl font-semibold hidden sm:block">Manār (منار)</h1>
             </Link>
 
             <nav className="hidden md:flex items-center gap-1">

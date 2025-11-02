@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -20,22 +20,32 @@ export default function Search() {
   const [author, setAuthor] = useState<string>("");
   const [category, setCategory] = useState<string>("");
   const [era, setEra] = useState<string>("");
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
 
-  const buildQueryParams = () => {
-    const params = new URLSearchParams();
-    if (searchQuery) params.append("q", searchQuery);
-    if (author && author !== "all") params.append("author", author);
-    if (category && category !== "all") params.append("category", category);
-    if (era && era !== "all") params.append("era", era);
-    return params.toString();
-  };
+  // Debounce search query - search automatically after 500ms of no typing
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 500);
 
-  const hasFilters = searchQuery.length > 0 || (!!author && author !== "all") || (!!category && category !== "all") || (!!era && era !== "all");
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  const hasFilters = debouncedSearchQuery.length > 0 || (!!author && author !== "all") || (!!category && category !== "all") || (!!era && era !== "all");
+
+  const [useShamela, setUseShamela] = useState(false); // Abilita/disabilita scraping Shamela
 
   const { data: texts, isLoading } = useQuery<Text[]>({
-    queryKey: ["/api/texts/search", searchQuery, author, category, era],
+    queryKey: ["/api/texts/search", debouncedSearchQuery, author, category, era, useShamela],
     queryFn: async () => {
-      const queryString = buildQueryParams();
+      const params = new URLSearchParams();
+      if (debouncedSearchQuery) params.append("q", debouncedSearchQuery);
+      if (author && author !== "all") params.append("author", author);
+      if (category && category !== "all") params.append("category", category);
+      if (era && era !== "all") params.append("era", era);
+      if (useShamela && debouncedSearchQuery) params.append("useShamela", "true");
+      
+      const queryString = params.toString();
       const url = `/api/texts/search${queryString ? `?${queryString}` : ''}`;
       const response = await fetch(url, {
         credentials: 'include',
@@ -50,14 +60,15 @@ export default function Search() {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
+    // Search is now automatic, but prevent form submission
   };
 
   return (
     <div className="space-y-6">
       <section className="space-y-2">
-        <h1 className="text-3xl font-bold tracking-tight">Cerca Testi</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Cerca Testi (منار)</h1>
         <p className="text-muted-foreground">
-          Esplora migliaia di testi arabi dalla biblioteca Shamela
+          Esplora migliaia di testi arabi dalla biblioteca Shamela.ws
         </p>
       </section>
 
@@ -135,6 +146,22 @@ export default function Search() {
             </div>
           </div>
 
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="useShamela"
+              checked={useShamela}
+              onChange={(e) => setUseShamela(e.target.checked)}
+              className="h-4 w-4"
+            />
+            <label htmlFor="useShamela" className="text-sm font-medium">
+              Cerca anche su Shamela.ws (web scraping)
+            </label>
+            <p className="text-xs text-muted-foreground ml-6">
+              ⚠️ Verifica i termini di servizio di Shamela.ws prima di usare
+            </p>
+          </div>
+
           {((author && author !== "all") || (category && category !== "all") || (era && era !== "all")) && (
             <Button
               type="button"
@@ -189,7 +216,16 @@ export default function Search() {
                 <p className="text-sm line-clamp-3 font-serif" dir="rtl">
                   {text.content.substring(0, 150)}...
                 </p>
-                <Button asChild data-testid={`button-read-${text.id}`}>
+                <Button 
+                  asChild 
+                  data-testid={`button-read-${text.id}`}
+                  onClick={() => {
+                    // Se il testo viene da Shamela, forziamo il refresh da Shamela
+                    if (useShamela && text.metadata && typeof text.metadata === 'object' && 'source' in text.metadata && text.metadata.source === 'shamela.ws') {
+                      // Il refresh verrà fatto dal TextReader
+                    }
+                  }}
+                >
                   <Link href={`/text/${text.id}`}>
                     <a className="flex items-center gap-2">
                       <BookOpen className="h-4 w-4" />

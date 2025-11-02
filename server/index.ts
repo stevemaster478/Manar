@@ -1,3 +1,6 @@
+// Load environment variables from .env file
+import "dotenv/config";
+
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
@@ -76,16 +79,23 @@ app.use((req, res, next) => {
     serveStatic(app);
   }
 
-  // ALWAYS serve the app on the port specified in the environment variable PORT
-  // Other ports are firewalled. Default to 5000 if not specified.
-  // this serves both the API and the client.
-  // It is the only port that is not firewalled.
-  const port = parseInt(process.env.PORT || '5000', 10);
-  server.listen({
-    port,
-    host: "0.0.0.0",
-    reusePort: true,
-  }, () => {
-    log(`serving on port ${port}`);
+  // Serve the app on the port specified in the environment variable PORT
+  // Default to 5173 for development (Vite default), or use PORT env var
+  const port = parseInt(process.env.PORT || '5173', 10);
+  server.listen(port, "0.0.0.0", () => {
+    log(`Manār serving on port ${port}`);
+  }).on('error', (err: NodeJS.ErrnoException) => {
+    if (err.code === 'EADDRINUSE') {
+      console.error(`\n❌ Error: Port ${port} is already in use!`);
+      console.error(`\n💡 To fix this, you can:`);
+      console.error(`   1. Find and kill the process using port ${port}:`);
+      console.error(`      Windows: netstat -ano | findstr :${port}`);
+      console.error(`      Then: taskkill /PID <PID> /F`);
+      console.error(`   2. Or use a different port by setting PORT in .env`);
+      console.error(`\n`);
+      process.exit(1);
+    } else {
+      throw err;
+    }
   });
 })();

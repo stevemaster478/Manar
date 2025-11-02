@@ -10,12 +10,12 @@ export default function Landing() {
         <div className="container flex h-16 items-center justify-between px-4 mx-auto max-w-7xl">
           <div className="flex items-center gap-2">
             <BookOpen className="h-6 w-6 text-primary" />
-            <h1 className="text-xl font-semibold">Salafiyyūn</h1>
+            <h1 className="text-xl font-semibold">Manār (منار)</h1>
           </div>
           <div className="flex items-center gap-2">
             <ThemeToggle />
             <Button asChild data-testid="button-login">
-              <a href="/api/login">Accedi</a>
+              <a href="/api/auth/google">Accedi con Google</a>
             </Button>
           </div>
         </div>
@@ -34,7 +34,7 @@ export default function Landing() {
           </p>
           <div className="flex gap-4 justify-center pt-4">
             <Button size="lg" asChild data-testid="button-get-started">
-              <a href="/api/login">Inizia Ora</a>
+              <a href="/api/auth/google">Inizia Ora</a>
             </Button>
             <Button size="lg" variant="outline" asChild data-testid="button-learn-more">
               <a href="#features">Scopri di più</a>
@@ -120,14 +120,14 @@ export default function Landing() {
             traduzioni AI contestuali.
           </p>
           <Button size="lg" asChild data-testid="button-cta-login">
-            <a href="/api/login">Accedi con Replit</a>
+            <a href="/api/auth/google">Accedi con Google</a>
           </Button>
         </section>
       </main>
 
       <footer className="border-t mt-16 py-8">
         <div className="container mx-auto max-w-7xl px-4 text-center text-sm text-muted-foreground">
-          <p>© 2025 Salafiyyūn - Biblioteca Shamela con Traduzioni AI</p>
+          <p>© 2025 Manār (منار) - Biblioteca Shamela con Traduzioni AI</p>
         </div>
       </footer>
     </div>

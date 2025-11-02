@@ -49,11 +49,17 @@ export interface IStorage {
 export class DatabaseStorage implements IStorage {
   // User operations
   async getUser(id: string): Promise<User | undefined> {
+    if (!db) {
+      throw new Error("Database not initialized. Set DATABASE_URL in .env file.");
+    }
     const [user] = await db.select().from(users).where(eq(users.id, id));
     return user;
   }
 
   async upsertUser(userData: UpsertUser): Promise<User> {
+    if (!db) {
+      throw new Error("Database not initialized. Set DATABASE_URL in .env file.");
+    }
     const [user] = await db
       .insert(users)
       .values(userData)
@@ -69,6 +75,9 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateUserTextSize(id: string, textSize: string): Promise<void> {
+    if (!db) {
+      throw new Error("Database not initialized. Set DATABASE_URL in .env file.");
+    }
     await db.update(users).set({ textSize }).where(eq(users.id, id));
   }
 
@@ -223,4 +232,43 @@ export class DatabaseStorage implements IStorage {
   }
 }
 
-export const storage = new DatabaseStorage();
+// Lazy initialization - only create instance if database is available
+let storageInstance: DatabaseStorage | undefined;
+
+function getStorage(): DatabaseStorage {
+  if (!db) {
+    const dbUrl = process.env.DATABASE_URL;
+    const errorMsg = dbUrl 
+      ? `Database not initialized. DATABASE_URL is set but invalid: ${dbUrl.substring(0, 30)}...`
+      : "Database not initialized. Set DATABASE_URL in .env file with a valid Neon PostgreSQL connection string.";
+    throw new Error(errorMsg);
+  }
+  if (!storageInstance) {
+    storageInstance = new DatabaseStorage();
+  }
+  return storageInstance;
+}
+
+export const storage: IStorage = {
+  getUser: (id: string) => getStorage().getUser(id),
+  upsertUser: (userData: UpsertUser) => getStorage().upsertUser(userData),
+  updateUserTextSize: (id: string, textSize: string) => getStorage().updateUserTextSize(id, textSize),
+  searchTexts: async (query?: string, author?: string, category?: string, era?: string) => {
+    if (!db) {
+      console.warn("⚠️  Database not available, returning empty results");
+      return [];
+    }
+    return getStorage().searchTexts(query, author, category, era);
+  },
+  getTextById: (id: number) => getStorage().getTextById(id),
+  createText: (text: InsertText) => getStorage().createText(text),
+  getTranslation: (textId: number, originalText: string) => getStorage().getTranslation(textId, originalText),
+  createTranslation: (translation: InsertTranslation) => getStorage().createTranslation(translation),
+  getBookmarksByUserId: (userId: string) => getStorage().getBookmarksByUserId(userId),
+  getRecentBookmarksByUserId: (userId: string, limit: number) => getStorage().getRecentBookmarksByUserId(userId, limit),
+  createBookmark: (bookmark: InsertBookmark) => getStorage().createBookmark(bookmark),
+  deleteBookmark: (id: string, userId: string) => getStorage().deleteBookmark(id, userId),
+  getReadingHistoryByUserId: (userId: string) => getStorage().getReadingHistoryByUserId(userId),
+  getRecentReadingHistoryByUserId: (userId: string, limit: number) => getStorage().getRecentReadingHistoryByUserId(userId, limit),
+  upsertReadingHistory: (history: InsertReadingHistory) => getStorage().upsertReadingHistory(history),
+};

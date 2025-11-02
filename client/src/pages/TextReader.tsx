@@ -14,6 +14,9 @@ import {
   ArrowLeft,
   Languages,
   Loader2,
+  ChevronRight,
+  ChevronLeft,
+  List,
 } from "lucide-react";
 import {
   Select,
@@ -44,31 +47,51 @@ const TEXT_SIZE_CLASSES: Record<TextSize, string> = {
 
 export default function TextReader() {
   const { id } = useParams();
+  const [, setLocation] = useLocation();
   const { toast } = useToast();
   const { user } = useAuth();
   const [textSize, setTextSize] = useState<TextSize>(
     (user?.textSize as TextSize) || "medium"
   );
   const [selectedText, setSelectedText] = useState("");
+  const [translatedText, setTranslatedText] = useState("");
   const [showTranslation, setShowTranslation] = useState(false);
   const [showBookmarkDialog, setShowBookmarkDialog] = useState(false);
   const [bookmarkNote, setBookmarkNote] = useState("");
+  const [isTranslatingPage, setIsTranslatingPage] = useState(false);
+  const [showChapters, setShowChapters] = useState(false);
+  const chapters = text?.metadata && typeof text.metadata === 'object' && 'chapters' in text.metadata 
+    ? (text.metadata.chapters as Array<{ id: number; title: string; page?: number }>)
+    : undefined;
 
-  const { data: text, isLoading } = useQuery<Text>({
-    queryKey: ["/api/texts", id],
+  const { data: text, isLoading, refetch } = useQuery<Text>({
+    queryKey: ["/api/texts", id, "fromShamela"],
+    queryFn: async () => {
+      // Se il testo proviene da Shamela (verificato dal metadata), forziamo il refresh
+      const url = `/api/texts/${id}?fromShamela=true`;
+      const response = await fetch(url, {
+        credentials: 'include',
+      });
+      if (!response.ok) {
+        throw new Error('Failed to fetch text');
+      }
+      return response.json();
+    },
     enabled: !!id,
   });
 
   const translateMutation = useMutation({
-    mutationFn: async (textToTranslate: string) => {
+    mutationFn: async ({ textToTranslate, isFullPage = false }: { textToTranslate: string; isFullPage?: boolean }) => {
       return await apiRequest("POST", "/api/translate", {
         textId: id,
         originalText: textToTranslate,
+        isFullPage,
       });
     },
     onSuccess: (data: Translation) => {
-      setSelectedText(data.translatedText);
+      setTranslatedText(data.translatedText);
       setShowTranslation(true);
+      setIsTranslatingPage(false);
       toast({
         title: "Traduzione completata",
         description: "Il testo è stato tradotto con successo",
@@ -109,23 +132,42 @@ export default function TextReader() {
     },
   });
 
-  const handleTextSelection = () => {
-    const selection = window.getSelection();
-    const text = selection?.toString().trim();
-    if (text && text.length > 0) {
-      setSelectedText(text);
-    }
+  const handleTextSelection = (e: React.MouseEvent) => {
+    // Aspetta che la selezione sia completa
+    setTimeout(() => {
+      const selection = window.getSelection();
+      if (selection && selection.rangeCount > 0) {
+        const text = selection.toString().trim();
+        if (text && text.length > 0) {
+          setSelectedText(text);
+          // Mostra feedback visivo (opzionale)
+          const range = selection.getRangeAt(0);
+          // Reset translation view when new text is selected
+          if (text !== selectedText) {
+            setShowTranslation(false);
+            setTranslatedText("");
+          }
+        }
+      }
+    }, 0);
   };
 
   const handleTranslate = () => {
     if (selectedText) {
-      translateMutation.mutate(selectedText);
+      translateMutation.mutate({ textToTranslate: selectedText, isFullPage: false });
     } else {
       toast({
         title: "Seleziona del testo",
         description: "Seleziona un passaggio da tradurre",
         variant: "destructive",
       });
+    }
+  };
+
+  const handleTranslatePage = () => {
+    if (text?.content) {
+      setIsTranslatingPage(true);
+      translateMutation.mutate({ textToTranslate: text.content, isFullPage: true });
     }
   };
 
@@ -228,6 +270,19 @@ export default function TextReader() {
 
         <div className="flex-1" />
 
+        {/* Navigazione capitoli se disponibile */}
+        {chapters && chapters.length > 0 && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowChapters(!showChapters)}
+            className="gap-2"
+          >
+            <List className="h-4 w-4" />
+            Capitoli ({chapters.length})
+          </Button>
+        )}
+
         <Button
           variant="default"
           onClick={handleTranslate}
@@ -235,7 +290,7 @@ export default function TextReader() {
           data-testid="button-translate"
           className="gap-2"
         >
-          {translateMutation.isPending ? (
+          {translateMutation.isPending && !isTranslatingPage ? (
             <>
               <Loader2 className="h-4 w-4 animate-spin" />
               Traduzione...
@@ -243,7 +298,27 @@ export default function TextReader() {
           ) : (
             <>
               <Languages className="h-4 w-4" />
-              Traduci
+              Traduci selezione
+            </>
+          )}
+        </Button>
+
+        <Button
+          variant="outline"
+          onClick={handleTranslatePage}
+          disabled={translateMutation.isPending || !text?.content}
+          data-testid="button-translate-page"
+          className="gap-2"
+        >
+          {translateMutation.isPending && isTranslatingPage ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Traduzione pagina...
+            </>
+          ) : (
+            <>
+              <Languages className="h-4 w-4" />
+              Traduci pagina
             </>
           )}
         </Button>
@@ -260,30 +335,152 @@ export default function TextReader() {
         </Button>
       </Card>
 
-      <Card className="p-8 md:p-12">
-        <div
-          className={`font-serif leading-loose ${TEXT_SIZE_CLASSES[textSize]} select-text`}
-          dir="rtl"
-          lang="ar"
-          onMouseUp={handleTextSelection}
-          data-testid="text-content"
-        >
-          {text.content}
-        </div>
-      </Card>
-
-      {showTranslation && selectedText && (
-        <Card className="p-6 bg-primary/5 border-primary/20">
-          <div className="space-y-3">
-            <div className="flex items-center gap-2">
-              <Languages className="h-5 w-5 text-primary" />
-              <h3 className="font-semibold">Traduzione</h3>
-            </div>
-            <p className="text-base leading-relaxed" data-testid="text-translation">
-              {selectedText}
-            </p>
+      {/* Introduzione se disponibile */}
+      {text.introduction && (
+        <Card className="p-6 mb-6 bg-muted/30 border-muted">
+          <div className="mb-3">
+            <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+              Introduzione
+            </h3>
+          </div>
+          <div
+            className="text-sm leading-relaxed font-serif"
+            dir="rtl"
+            lang="ar"
+            style={{
+              fontFamily: '"Noto Sans Arabic", "Arial Unicode MS", "Tahoma", sans-serif',
+              lineHeight: "2",
+            }}
+          >
+            {text.introduction.split('\n').map((paragraph, idx) => (
+              paragraph.trim() ? (
+                <p key={idx} className="mb-3 last:mb-0">
+                  {paragraph}
+                </p>
+              ) : null
+            ))}
           </div>
         </Card>
+      )}
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card className="p-8 md:p-12 bg-gradient-to-b from-background to-muted/20">
+          <div className="mb-4 pb-3 border-b flex items-center justify-between">
+            <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Testo Arabo</h3>
+            {selectedText && (
+              <span className="text-xs text-muted-foreground">
+                {selectedText.length} caratteri selezionati
+              </span>
+            )}
+          </div>
+          <div
+            className={`font-serif leading-relaxed ${TEXT_SIZE_CLASSES[textSize]} select-text text-justify`}
+            dir="rtl"
+            lang="ar"
+            style={{
+              fontFamily: '"Noto Sans Arabic", "Arial Unicode MS", "Tahoma", sans-serif',
+              lineHeight: "2.5",
+              letterSpacing: "0.05em",
+              userSelect: "text",
+              WebkitUserSelect: "text",
+              MozUserSelect: "text",
+              msUserSelect: "text",
+            }}
+            onMouseUp={handleTextSelection}
+            onSelect={() => {
+              setTimeout(() => {
+                const selection = window.getSelection();
+                if (selection) {
+                  const text = selection.toString().trim();
+                  if (text && text.length > 0) {
+                    setSelectedText(text);
+                    if (text !== selectedText) {
+                      setShowTranslation(false);
+                      setTranslatedText("");
+                    }
+                  }
+                }
+              }, 0);
+            }}
+            data-testid="text-content"
+          >
+            {text.content.split('\n').map((paragraph, idx) => (
+              paragraph.trim() ? (
+                <p key={idx} className="mb-4 last:mb-0" style={{ marginBottom: "1.5rem" }}>
+                  {paragraph}
+                </p>
+              ) : null
+            ))}
+          </div>
+        </Card>
+
+        {showTranslation && translatedText && (
+          <Card className="p-8 md:p-12 bg-primary/5 border-primary/20">
+            <div className="mb-4 pb-3 border-b border-primary/20">
+              <div className="flex items-center gap-2">
+                <Languages className="h-5 w-5 text-primary" />
+                <h3 className="font-semibold">Traduzione Italiana</h3>
+              </div>
+            </div>
+            <div
+              className={`${TEXT_SIZE_CLASSES[textSize]} leading-relaxed text-justify`}
+              dir="ltr"
+              lang="it"
+              style={{
+                lineHeight: "2",
+              }}
+              data-testid="text-translation"
+            >
+              {translatedText.split('\n').map((paragraph, idx) => (
+                paragraph.trim() ? (
+                  <p key={idx} className="mb-4 last:mb-0" style={{ marginBottom: "1.5rem" }}>
+                    {paragraph}
+                  </p>
+                ) : null
+              ))}
+            </div>
+          </Card>
+        )}
+      </div>
+
+      {/* Dialog capitoli */}
+      {chapters && chapters.length > 0 && (
+        <Dialog open={showChapters} onOpenChange={setShowChapters}>
+          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Naviga tra i Capitoli</DialogTitle>
+              <DialogDescription>
+                Seleziona un capitolo per navigare direttamente
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-2">
+              {chapters.map((chapter) => (
+                <Button
+                  key={chapter.id}
+                  variant="ghost"
+                  className="w-full justify-start text-left font-serif"
+                  dir="rtl"
+                  onClick={() => {
+                    // TODO: Navigate to chapter (richiede implementazione backend)
+                    setShowChapters(false);
+                    toast({
+                      title: "Navigazione capitoli",
+                      description: "Funzionalità in fase di sviluppo",
+                    });
+                  }}
+                >
+                  <ChevronLeft className="h-4 w-4 mr-2" />
+                  {chapter.title}
+                  {chapter.page && (
+                    <span className="ml-auto text-xs text-muted-foreground">
+                      Pagina {chapter.page}
+                    </span>
+                  )}
+                </Button>
+              ))}
+            </div>
+          </DialogContent>
+        </Dialog>
       )}
 
       <Dialog open={showBookmarkDialog} onOpenChange={setShowBookmarkDialog}>

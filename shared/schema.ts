@@ -46,7 +46,8 @@ export const texts = pgTable("texts", {
   category: varchar("category"),
   era: varchar("era"),
   content: text("content").notNull(),
-  metadata: jsonb("metadata"), // Additional book metadata
+  introduction: text("introduction"), // Introduzione del libro da Shamela
+  metadata: jsonb("metadata"), // Additional book metadata (chapters, pages, etc.)
   createdAt: timestamp("created_at").defaultNow(),
 });
 
