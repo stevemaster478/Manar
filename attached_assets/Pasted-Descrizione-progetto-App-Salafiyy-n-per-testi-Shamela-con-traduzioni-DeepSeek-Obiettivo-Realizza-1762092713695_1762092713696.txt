@@ -1,0 +1,71 @@
+Descrizione progetto: App Salafiyyūn per testi Shamela con traduzioni DeepSeek
+Obiettivo:
+Realizzare un’app mobile cross-platform (React Native) che permetta di cercare, leggere e tradurre i testi arabi della biblioteca Shamela.ws. L’app offrirà traduzioni contestuali in italiano tramite l’API DeepSeek Translator, con un'interfaccia moderna ispirata allo stile OpenAI.com.
+
+Caratteristiche principali
+Ricerca avanzata: ricerca full-text nei testi di Shamela con filtri per autore, argomento, epoca.
+
+Lettura testi: visualizzazione integrale dei testi arabi originali.
+
+Traduzione AI: richiesta asincrona all’API DeepSeek per tradurre passaggi specifici, con caching locale per ridurre chiamate.
+
+Interfaccia moderna: design pulito, font leggibili, colori simili a OpenAI (sfondo bianco, blu cobalto, grigio chiaro, accenti viola).
+
+Personalizzazione: modalità scura, dimensione testo regolabile, segnalibri, annotazioni.
+
+Account utente: salvataggio preferiti, cronologia di lettura e traduzioni.
+
+Notifiche push: aggiornamenti su nuovi testi o funzionalità.
+
+Performance: caching locale dati frequenti, caricamento veloce, animazioni fluide.
+
+UI/UX ispirata a OpenAI.com
+Palette colori: bianco (#FFFFFF), blu cobalto (#3B82F6), grigio chiaro (#F3F4F6), viola acceso (#8B5CF6).
+
+Layout: minimalista, spazi ampi, uso intelligente di ombre leggere per profondità.
+
+Tipografia: font sans-serif moderno, leggibile e armonioso.
+
+Navigazione bottom-tab con icone semplici e descrittive.
+
+Pagine di lettura con supporto per zoom, evidenziazioni e toggle lingua (arabo/italiano).
+
+Bottone traduci sostanzialmente visibile, con feedback caricamento e risultato.
+
+Modalità dark con palette inversa di colori.
+
+Architettura tecnica e stack
+Frontend: React Native con librerie UI (React Native Paper o NativeBase).
+
+Backend: Node.js/Express per orchestrare chiamate API Shamela e DeepSeek, caching, autenticazioni.
+
+Database: MongoDB Atlas per utenti, preferiti, cache traduzioni.
+
+API Shamela: integrazione tramite libreria o chiamate dirette REST.
+
+API DeepSeek: traduzioni contestuali con gestione limiti free plan, caching risultati traduzione.
+
+Hosting: backend su Heroku, Vercel o AWS; DB su Atlas.
+
+CI/CD: pipeline GitHub Actions o alternative per deploy automatizzati.
+
+Attività e milestone per l’agente
+Setup ambiente React Native, creazione boilerplate app.
+
+Design UI base ispirato a OpenAI.com (colori, font, layout).
+
+Implementazione sistema login + gestione utenti.
+
+Integrazione API Shamela per ricerca e visualizzazione testi.
+
+Integrazione API DeepSeek per traduzioni con caching.
+
+Sviluppo funzionalità segnalibri, annotazioni e preferiti.
+
+Modalità scura e personalizzazioni UI.
+
+Testing su dispositivi iOS/Android, ottimizzazione UX.
+
+Setup backend con database e deploy cloud.
+
+Dokumentazione codice e istruzioni per manutenzione.
