@@ -10,7 +10,10 @@ build/
 .env
 .env.local
 .env.production
+<<<<<<< HEAD
 .env*.local
+=======
+>>>>>>> 3093c1b3d20d30f708b6b8aa4c140654117a9680
 
 # IDE
 .vscode/
@@ -36,6 +39,7 @@ coverage/
 # Replit
 .replit
 replit.nix
+<<<<<<< HEAD
 .local/
 
 # Vercel
@@ -47,3 +51,6 @@ attached_assets/
 # Documentation (keep only README.md)
 *.md
 !README.md
+=======
+
+>>>>>>> 3093c1b3d20d30f708b6b8aa4c140654117a9680

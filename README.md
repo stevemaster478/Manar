@@ -1,17 +1,28 @@
+<<<<<<< HEAD
 # Manār (منار)
 
 Un'applicazione full-stack per la ricerca, lettura e traduzione di testi arabi dalla biblioteca Shamela.ws, con traduzioni AI tramite Gemini.
+=======
+# Manār
+
+A full-stack web application built with React, Express, and TypeScript.
+>>>>>>> 3093c1b3d20d30f708b6b8aa4c140654117a9680
 
 ## Tech Stack
 
 - **Frontend**: React 18, TypeScript, Vite, Tailwind CSS, shadcn/ui
 - **Backend**: Express, TypeScript, Node.js
+<<<<<<< HEAD
 - **Database**: Neon PostgreSQL (free tier) con Drizzle ORM
 - **Authentication**: Google OAuth 2.0 e Apple Sign-In
 - **AI Translation**: Google Gemini API
 - **Text Source**: Shamela.ws API per ricerca testi arabi
 - **State Management**: TanStack Query (React Query)
 - **Deployment**: Vercel
+=======
+- **Database**: Neon PostgreSQL with Drizzle ORM
+- **State Management**: TanStack Query (React Query)
+>>>>>>> 3093c1b3d20d30f708b6b8aa4c140654117a9680
 
 ## Getting Started
 
@@ -28,6 +39,7 @@ Un'applicazione full-stack per la ricerca, lettura e traduzione di testi arabi d
 npm install
 ```
 
+<<<<<<< HEAD
 3. Set up environment variables:
 Create a `.env` file in the root directory:
 ```env
@@ -54,10 +66,21 @@ SHAMELA_API_KEY=your_shamela_api_key
 SESSION_SECRET=your-random-secret-key-change-in-production
 
 # Server
+=======
+3. Set up environment variables (optional):
+Create a `.env` file in the root directory:
+```env
+DATABASE_URL=your_postgres_connection_string
+>>>>>>> 3093c1b3d20d30f708b6b8aa4c140654117a9680
 PORT=5173
 NODE_ENV=development
 ```
 
+<<<<<<< HEAD
+=======
+Note: DATABASE_URL is optional in development mode. If not set, the app will run but database functionality will be disabled.
+
+>>>>>>> 3093c1b3d20d30f708b6b8aa4c140654117a9680
 4. Start the development server:
 ```bash
 npm run dev
@@ -92,6 +115,7 @@ The application will be available at `http://localhost:5173`
 
 ```
 
+<<<<<<< HEAD
 ## Features
 
 - 🔍 **Ricerca avanzata**: Ricerca full-text nei testi di Shamela con filtri per autore, categoria, epoca
@@ -130,6 +154,11 @@ The application will be available at `http://localhost:5173`
 ## Development
 
 Il progetto usa una struttura monorepo con un singolo package.json. Il server di sviluppo esegue sia client che server, con Vite che gestisce l'hot module replacement per il frontend.
+=======
+## Development
+
+The project uses a monorepo structure with a single package.json. The development server runs both the client and server, with Vite handling hot module replacement for the frontend.
+>>>>>>> 3093c1b3d20d30f708b6b8aa4c140654117a9680
 
 ## License
 

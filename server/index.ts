@@ -80,6 +80,7 @@ app.use((req, res, next) => {
   }
 
   // Serve the app on the port specified in the environment variable PORT
+<<<<<<< HEAD
   // Default to 5173 for development (Vite default), or use PORT env var
   const port = parseInt(process.env.PORT || '5173', 10);
   server.listen(port, "0.0.0.0", () => {
@@ -97,5 +98,11 @@ app.use((req, res, next) => {
     } else {
       throw err;
     }
+=======
+  // Default to 5173 if not specified (Vite's default port)
+  const port = parseInt(process.env.PORT || '5173', 10);
+  server.listen(port, "0.0.0.0", () => {
+    log(`serving on port ${port}`);
+>>>>>>> 3093c1b3d20d30f708b6b8aa4c140654117a9680
   });
 })();

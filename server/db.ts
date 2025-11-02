@@ -9,6 +9,7 @@ neonConfig.webSocketConstructor = ws;
 let pool: Pool | undefined;
 let db: ReturnType<typeof drizzle> | undefined;
 
+<<<<<<< HEAD
 const databaseUrl = process.env.DATABASE_URL?.trim();
 
 // Debug: log DATABASE_URL status (first 30 chars only for security)
@@ -62,4 +63,15 @@ if (!databaseUrl || databaseUrl.length === 0) {
   }
 }
 
+=======
+if (!process.env.DATABASE_URL) {
+  console.warn(
+    "DATABASE_URL not set. Database functionality will not be available.",
+  );
+} else {
+  pool = new Pool({ connectionString: process.env.DATABASE_URL });
+  db = drizzle({ client: pool, schema });
+}
+
+>>>>>>> 3093c1b3d20d30f708b6b8aa4c140654117a9680
 export { pool, db };
